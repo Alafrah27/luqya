@@ -1,0 +1,23 @@
+{
+  "app_name": "لُقيا",
+  "app_description": "رسائل سريعة وآمنة مصممة للخصوصية والمحادثات حقيقية.",
+  "start_button": "ابدأ الآن",
+  "privacy_policy": "   بالضغط على “ابداء الآن”, توافقك على شروط الخدمة وسياسة الخصوصية.",
+  "login": "تسجيل الدخول",
+  "login_title": "ابدا الأن,",
+  "login_subtitle": "ادخل رقم الجوال للحصول على كود التحقق الآمن.",
+  "login_button": "ارسل الكود",
+  "login_privacy": "بالضغط على ادخال رقم الجوال، توافقك على شروط الخدمة وسياسة الخصوصية.",
+  "icon": "arrow-forward",
+  "phone_placeholder": "5xxxxxxxxx",
+  "phone_country": " الدولة",
+  "phone_number": " رقم الجوال",
+  "verify_title": "تحقق من الحساب",
+  "verify_subtitle": "لقد ارسلنا لك رمز التحقق الى",
+  "verify_button": "تحقق",
+  "verify_placeholder": "ادخل رمز التحقق",
+  "tab_chat": "الدردشات",
+  "tab_contacts": "جهات الاتصال",
+  "tab_notifications": "الإشعارات",
+  "tab_settings": "الإعدادات"
+}

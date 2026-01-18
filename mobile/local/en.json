@@ -1,0 +1,23 @@
+{
+  "app_name": "LUQYA",
+  "app_description": " Fast, secure messaging built for privacy and real conversations.",
+  "start_button": "Get Started",
+  "privacy_policy": "   By tapping “Get Started”, you agree to our Terms of Service and  Privacy Policy.",
+  "login": "Login Account",
+  "login_title": "Lets Get Started!,",
+  "login_subtitle": "enter your phone Number to Recieve a Secure  Verification code.",
+  "login_button": "Send Code",
+  "login_privacy": "by entering your phone number, you agree to our Terms of Service and Privacy Policy.",
+  "icon": "arrow-back",
+  "phone_placeholder": "5xxxxxxxxx",
+  "phone_country": " country",
+  "phone_number": " Phone Number",
+  "verify_title": "Verify Account",
+  "verify_subtitle": "we have sent you a verification code to",
+  "verify_button": "Verify",
+  "verify_placeholder": "Enter verification code",
+  "tab_chat": "Chats",
+  "tab_contacts": "Contacts",
+  "tab_notifications": "Notifications",
+  "tab_settings": "Settings"
+}
