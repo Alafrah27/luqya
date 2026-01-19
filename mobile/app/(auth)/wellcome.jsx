@@ -31,8 +31,8 @@ export default function Wellcome() {
                 <View className="mb-10">
                     <TouchableOpacity
                         onPress={() => router.push("/login")}
-                        className="bg-yellow-400 rounded-full py-4 mb-4">
-                        <Text className="text-center text-black font-semibold text-lg">
+                        className="bg-[#b88144] rounded-full py-4 mb-4">
+                        <Text className="text-center text-black font-semibold text-lg shadow-md">
                             {t('start_button')}
                         </Text>
                     </TouchableOpacity>

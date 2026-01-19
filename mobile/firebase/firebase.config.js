@@ -13,5 +13,4 @@ const firebaseConfig = {
 export const firebaseApp = initializeApp(firebaseConfig);
 export const auth = getAuth(firebaseApp);
 
-
 // expo id =0bc69e6d-9895-4c5a-bb8e-43cf5bfa96d3
