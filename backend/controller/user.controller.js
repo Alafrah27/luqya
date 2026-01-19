@@ -13,7 +13,7 @@ const generateToken = (userId) => {
 
 export const Register = async (req, res) => {
   try {
-    const { FullName, email, password, avatar } = req.body;
+    const { FullName, email, password, avatar, Expopushtoken } = req.body;
     if (!FullName || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
@@ -44,6 +44,7 @@ export const Register = async (req, res) => {
       FullName,
       email,
       password: hashedPassword,
+      Expopushtoken,
       avatar:
         avatar ||
         `https://api.dicebear.com/7.x/avataaars/svg?seed=${customUuid}`,
