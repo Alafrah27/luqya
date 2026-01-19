@@ -1,100 +1,90 @@
+import React from 'react';
 import {
     View,
     Text,
     TouchableOpacity,
     TextInput,
-    TouchableWithoutFeedback,
-    Keyboard
-} from 'react-native';
-import React, { useState, useRef, useMemo } from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
-import BottomSheet from '@gorhom/bottom-sheet';
-import { CountryPicker } from 'react-native-country-codes-picker';
 
-export default function InputForm() {
+
+
+} from 'react-native';
+
+
+import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
+import { Link } from 'expo-router';
+
+
+const InputForm = () => {
     const { t } = useTranslation();
 
-    const bottomSheetRef = useRef(null);
-    const snapPoints = useMemo(() => ['25%', '50%', '75%'], []);
+    // const handleGoogleLogin = async () => {
 
-    const [visible, setVisible] = useState(false);
-    const [country, setCountry] = useState({
-        cca2: 'SA',
-        callingCode: '966',
-        name: 'Saudi Arabia',
-        flag: '🇸🇦',
-    });
-
-    const openSheet = () => {
-        setVisible(true);
-        bottomSheetRef.current?.snapToIndex(1);
-    };
-
-    const closeSheet = () => {
-        setVisible(false);
-        bottomSheetRef.current?.close();
-    };
+    // };
 
     return (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View className="flex-1 w-full px-2">
-                <View className="flex-row items-center justify-between gap-4">
+        <View className="flex-1 justify-center items-center px-3">
 
-                    {/* Country */}
-                    <View>
-                        <Text className="text-lg font-semibold text-gray-700 mb-2">
-                            {t('phone_country')}
-                        </Text>
+            <View className="gap-0">
+                <View
+                    className="flex-row align-center
+                  w-full bg-gray-300/30 space-x-3
+                   border border-slate-200
+                    rounded-full px-4 py-3
+                     items-center mb-5 gap-3">
+                    <Ionicons name="person-outline" size={20} color="#b88144" />
+                    <TextInput
+                        placeholder={t('input_name')}
+                        keyboardType="email-address"
+                        className="flex-1 text-black py-2 shrink placeholder:text-slate-400 placeholder:text-sm"
 
-                        <TouchableOpacity
-                            onPress={openSheet}
-                            className="flex-row items-center justify-between gap-6 border border-gray-300 rounded-full px-4 py-3"
-                        >
-                            <Text className="text-base text-gray-600">
-                                {country.flag} +{country.callingCode}
-                            </Text>
-                            <Ionicons name="chevron-down" size={24} color="black" />
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Phone number */}
-                    <View className="flex-1">
-                        <Text className="text-lg font-semibold text-gray-700 mb-2">
-                            {t('phone_number')}
-                        </Text>
-
-                        <TextInput
-                            className="flex-1 border border-gray-300 rounded-full px-5 py-3 text-base text-gray-700"
-                            placeholder={t('phone_placeholder')}
-                            placeholderTextColor="#9CA3AF"
-                            keyboardType="phone-pad"
-                        />
-                    </View>
-                </View>
-
-                {/* Bottom Sheet */}
-                <BottomSheet
-                    ref={bottomSheetRef}
-                    index={-1}
-                    snapPoints={snapPoints}
-                    enablePanDownToClose
-                    onClose={closeSheet}
-                >
-                    <CountryPicker
-                        show={visible}
-                        pickerButtonOnPress={(item) => {
-                            setCountry({
-                                cca2: item.code,
-                                callingCode: item.dial_code.replace('+', ''),
-                                name: item.name.en,
-                                flag: item.flag,
-                            });
-                            closeSheet();
-                        }}
                     />
-                </BottomSheet>
+                </View>
+                <View
+                    className="flex-row align-center
+                  w-full bg-gray-300/30 space-x-3
+                   border border-slate-200
+                    rounded-full px-4 py-3
+                     items-center mb-5 gap-3">
+                    <Ionicons name="mail-outline" size={20} color="#b88144" />
+                    <TextInput
+                        placeholder={t('input_email')}
+                        keyboardType="email-address"
+                        className="flex-1 text-black py-2 shrink placeholder:text-slate-400 placeholder:text-sm"
+
+                    />
+                </View>
+                <View
+                    className="flex-row align-center
+                  w-full bg-gray-300/30 space-x-3
+                   border border-slate-200
+                    rounded-full px-4 py-3
+                     items-center mb-6 gap-3">
+                    <Ionicons name="lock-closed-outline" size={20} color="#b88144" />
+                    <TextInput
+                        placeholder={t('input_password')}
+                        keyboardType="email-address"
+                        className="flex-1 text-black py-2 shrink placeholder:text-slate-400 placeholder:text-sm"
+
+                    />
+                </View>
             </View>
-        </TouchableWithoutFeedback>
+
+
+            <View className="mt-10 absolute bottom-8 w-full space-y-10 justify-center items-center">
+                <TouchableOpacity className="bg-[#b88144] w-full rounded-full py-4 px-10 flex-row items-center space-x-3 shadow-md mb-4">
+                    <Text className="text-center text-black font-semibold text-lg flex-1">
+                        {t('register_now')}
+                    </Text>
+                </TouchableOpacity>
+                <Link href="/login" className="text-center text-xs text-slate-400 px-10 leading-5">
+                    {t('ihaveaccount')}   <Text className="text-[#b88144]">{t('login_now')}</Text>
+                </Link>
+            </View>
+        </View>
     );
-}
+};
+
+
+// CRITICAL: This fixes the "Missing required default export" warning
+export default InputForm;

@@ -2,40 +2,48 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
-    phoneNumber: {
+    uuid: {
       type: String,
       unique: true,
-      index: true,
+      
       required: true,
     },
+    email: {
+      type: String,
+      unique: true,
+      required: true,
+      lowercase: true,
+      trim: true,
+    },
+
     FullName: {
       type: String,
       required: true,
+      trim: true,
     },
-    firebaseUid: {
+    // 3. Make phoneNumber optional (not required)
+    password: {
       type: String,
       required: true,
     },
-    Expopushtoken: {
-      type: String,
-      required: true,
-    },
+    // 4. Store the Google Profile Image URL
     avatar: {
       type: String,
       default: "",
     },
-    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "FriendRequest" }],
-    block: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-    lastLogin: Date,
+    Expopushtoken: {
+      type: String,
+      required: false, // Changed to false in case they haven't granted permission yet
+    },
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Fixed ref to User
+    block: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    lastLogin: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const User = mongoose.model("User", userSchema);
-
 export default User;

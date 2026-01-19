@@ -1,6 +1,9 @@
 import jwt from "jsonwebtoken";
 import User from "../model/user.model.js";
 import cloudinary from "../lib/cloudinary.js";
+import bcryptjs from "bcryptjs";
+import dotenv from "dotenv";
+dotenv.config();
 
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -8,72 +11,96 @@ const generateToken = (userId) => {
   });
 };
 
-export const loginWithPhone = async (req, res) => {
+export const Register = async (req, res) => {
   try {
-    // 1. Get data from Firebase Middleware and Request Body
-    const { phoneNumber, firebaseUid } = req.firebaseUser;
-    const { expopushtoken, FullName } = req.body; // Added FullName from body
-
-    if (!phoneNumber || !firebaseUid) {
-      return res.status(400).json({ message: "Invalid firebase user data" });
+    const { FullName, email, password, avatar } = req.body;
+    if (!FullName || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({
+        message: " Password  must be at least 6 characters",
+      });
     }
 
-    // 2. Look for existing user
-    let user = await User.findOne({ phoneNumber });
+    if (FullName.length < 6) {
+      return res.status(400).json({
+        message: " FullName  must be at least 3 characters",
+      });
+    }
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
 
-    // 3. Setup a random avatar if it's a new user
-    const seed = Math.random().toString(36).substring(7);
-    const randomAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+    const salt = await bcryptjs.genSalt(10);
+    const hashedPassword = await bcryptjs.hash(password, salt);
+
+    // 4. Generate UUID
+    const randomUuid = Math.random().toString(36).substring(2, 15);
+    const customUuid = `UserID-${randomUuid}`;
+    const user = new User({
+      uuid: customUuid,
+      FullName,
+      email,
+      password: hashedPassword,
+      avatar:
+        avatar ||
+        `https://api.dicebear.com/7.x/avataaars/svg?seed=${customUuid}`,
+      lastLogin: new Date(),
+    });
 
     if (!user) {
-      // NEW USER REGISTRATION
-      user = new User({
-        phoneNumber,
-        firebaseUid,
-        FullName: FullName || "New User", // Fallback if name is missing
-        avatar: randomAvatar,
-        Expopushtoken: expopushtoken || "",
-        lastLogin: new Date(),
-      });
-
-      // Use validateBeforeSave: true to ensure your schema rules are followed
-      await user.save();
-      console.log(`✨ New user registered: ${phoneNumber}`);
-    } else {
-      // EXISTING USER LOGIN - Update tokens and UID if changed
-      let isChanged = false;
-
-      if (user.firebaseUid !== firebaseUid) {
-        user.firebaseUid = firebaseUid;
-        isChanged = true;
-      }
-
-      if (expopushtoken && user.Expopushtoken !== expopushtoken) {
-        user.Expopushtoken = expopushtoken;
-        isChanged = true;
-      }
-
-      user.lastLogin = new Date();
-
-      if (isChanged) await user.save();
-      console.log(`👋 User logged in: ${user.FullName}`);
+      return res.status(400).json({ message: "fail while creating user" });
     }
-
-    // 4. Generate your Backend JWT
+    await user.save();
     const token = generateToken(user._id);
-
-    return res.status(200).json({
-      message: "Login successful",
-      token,
+    return res.status(201).json({
       user: {
         _id: user._id,
-        phoneNumber: user.phoneNumber,
+        email: user.email,
         FullName: user.FullName,
         avatar: user.avatar,
       },
+      token,
+      message: "User registered successfully",
     });
   } catch (error) {
-    console.error("Login Error:", error);
+    console.error(error.message);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const Login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await bcryptjs.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const token = generateToken(user._id);
+    return res.status(200).json({
+      user: {
+        _id: user._id,
+        email: user.email,
+        FullName: user.FullName,
+        avatar: user.avatar,
+      },
+      token,
+      message: "Login successful",
+    });
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -133,7 +160,7 @@ export const updateUserProfile = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { $set: updates },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     ).select("-password");
 
     if (!updatedUser) {
@@ -173,7 +200,7 @@ export const deleteUserAccount = async (req, res) => {
     // 3. Remove this user from everyone else's friends and block lists
     await User.updateMany(
       { $or: [{ friends: userId }, { block: userId }] },
-      { $pull: { friends: userId, block: userId } }
+      { $pull: { friends: userId, block: userId } },
     );
 
     // 4. Delete the User document
