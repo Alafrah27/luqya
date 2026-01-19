@@ -9,7 +9,7 @@ const lngcontext = createContext();
 const LngProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [expoPushToken, setExpoPushToken] = useState(null);
-  const [error , setError] = useState(null);
+  const [error, setError] = useState(null);
   const { i18n } = useTranslation();
 
   useEffect(() => {

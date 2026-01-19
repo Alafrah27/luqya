@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 
 const instance = axios.create({
   baseURL: "https://luqya.onrender.com/api/v1",
-  timeout: 15000, // Increased timeout; 1000ms is very short for a free Render instance
+  timeout: 10000, // Increased timeout; 1000ms is very short for a free Render instance
   headers: { "Content-Type": "application/json" },
 });
 
