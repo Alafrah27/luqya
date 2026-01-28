@@ -4,7 +4,7 @@ export default function Notification() {
     return (
         <SafeAreaView className="flex-1" >
 
-            <View  className="flex-1 items-center justify-center">
+            <View  className="flex-1 ">
                 <Text>Notification Screen</Text>
             </View>
         </SafeAreaView>

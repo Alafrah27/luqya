@@ -1,44 +1,70 @@
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import * as Notifications from "expo-notifications";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { LngProvider } from "../context/LngContext";
 import "../lib/i18";
 import "../global.css";
+import { useAuthStore } from "@/store/Store";
+import { useEffect, } from "react";
 
-import * as Notifications from "expo-notifications";
 
-// Ensure i18n is initialized
 export default function RootLayout() {
 
+  const { user, isSignIn, token, userAuth } = useAuthStore();
+
+
+
+  useEffect(() => {
+    userAuth();
+  }, [userAuth]);
+
+
+  const checkAuth = user && isSignIn && token;
+
+  const ProtectRoute = () => {
+    return (
+      <>
+        <StatusBar style="dark" />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Protected guard={!checkAuth}>
+            <Stack.Screen name="(auth)" />
+          </Stack.Protected>
+          <Stack.Protected guard={!!checkAuth}>
+            <Stack.Screen name="(tabs)" />
+          </Stack.Protected>
+
+          <Stack.Screen name="accountsetting" options={{
+            headerShown: false,
+            presentation: "modal",
+            title: "Setting Account",
+            animation: "fade"
+
+          }} />
+        </Stack>
+      </>
+    )
+  }
+
+  // This tells Expo to show the alert even if the app is open
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
       shouldPlaySound: true,
-      shouldSetBadge: true,
+      shouldSetBadge: false,
     }),
   });
- 
-
   return (
     <>
-      <StatusBar style="auto" />
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <BottomSheetModalProvider>
+        <LngProvider>
+          <BottomSheetModalProvider>
 
-          <LngProvider>
-            <Stack>
-              <Stack.Screen name="(auth)" options={{
-                 headerShown: false,
-                 Animation: 'fade',
-                  }} />
-              <Stack.Screen name="(tabs)" options={{
-                 headerShown: false,
-                 Animation :"fade",
-                  }} />
-            </Stack>
-          </LngProvider>
-        </BottomSheetModalProvider>
+            <ProtectRoute />
+
+          </BottomSheetModalProvider>
+        </LngProvider>
       </GestureHandlerRootView>
     </>
   );

@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useContextProvider } from '../../context/LngContext';
 import { useAuthStore } from '../../store/Store';
+import BurntToastifY from '../CustomHookUi/BurntToatifY';
 
 
 const InputForm = () => {
@@ -26,10 +27,10 @@ const InputForm = () => {
     const router = useRouter()
     const handleRegister = async () => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+        // const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
         if (!emailRegex.test(email)) return alert(t('invalid_email'));
-        if (!passwordRegex.test(password)) return alert(t('invalid_password'));
+        // if (!passwordRegex.test(password)) return alert(t('invalid_password'));
         if (!FullName || FullName.length < 3) return alert("Invalid Name");
 
         // 2. Data Preparation
@@ -44,18 +45,31 @@ const InputForm = () => {
         const result = await register(data);
 
         if (result.success) {
-            // Redirect to home or chat screen
-            router.replace("/(tabs)");
+            BurntToastifY({
+                title: "Registration has been  successfully",
+                message: "Registration successful",
+                preset: "done",
+                type: "success"
+            })
+            router.replace("(tabs)/chat");
+
         } else {
             // Show server error (e.g., "User already exists")
             alert(result.message);
         }
     };
 
-    return (
-        <View className="flex-1 justify-center items-center px-3">
+    if (isLoading) {
+        return (
+            <View className="flex-1 justify-center items-center bg-gray-300/50">
+                <ActivityIndicator size="large" color="#b88144" />
+            </View>
+        );
+    }
 
-            <View className="gap-0">
+    return (
+        <View className="flex-1  px-3  ">
+            <View className=" flex-1 justify-center items-center">
                 <View
                     className="flex-row align-center
                   w-full bg-gray-300/30 space-x-3
@@ -116,7 +130,7 @@ const InputForm = () => {
             </View>
 
 
-            <View className="mt-10 absolute bottom-8 w-full space-y-10 justify-center items-center">
+            <View className="mt-12   w-full space-y-10 justify-center items-center">
                 <TouchableOpacity
                     disabled={isLoading}
                     onPress={handleRegister}

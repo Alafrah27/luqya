@@ -6,10 +6,12 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuthStore } from "@/store/Store";
 
 export default function Home() {
   const router = useRouter();
   const opacity = useSharedValue(0);
+  const { token } = useAuthStore();
 
   useEffect(() => {
     opacity.value = withTiming(1, { duration: 800 });
@@ -21,11 +23,16 @@ export default function Home() {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      router.replace("/wellcome"); // ✅ correct navigation
+      if (token) {
+        router.replace("(tabs)/chat");
+      } else {
+
+        router.replace("/wellcome"); // ✅ correct navigation
+      }
     }, 5000);
 
     return () => clearTimeout(timeout);
-  }, [router]);
+  }, [router, token]);
 
   return (
     <SafeAreaView className="flex-1 w-full  bg-gray-300/50 justify-center items-center">

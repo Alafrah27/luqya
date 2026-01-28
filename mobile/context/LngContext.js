@@ -32,7 +32,7 @@ const LngProvider = ({ children }) => {
       } finally {
         setLoading(false);
       }
-    }, 2000);
+    }, 5000);
   };
   return (
     <lngcontext.Provider
