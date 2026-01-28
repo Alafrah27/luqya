@@ -1,11 +1,15 @@
 import { Stack } from "expo-router";
+// import RedirectUserToTabs from "../../components/protectRoute/RedirectUserToTabs";
 
 export default function AuthLayout() {
     return (
-        <>
+
+
+        // <RedirectUserToTabs>
+
 
             <Stack screenOptions={{
-                animation: "fade"
+
             }}>
                 <Stack.Screen name="index" options={{ headerShown: false }} />
                 <Stack.Screen name="wellcome" options={{ headerShown: false }} />
@@ -20,6 +24,8 @@ export default function AuthLayout() {
 
                 }} />
             </Stack>
-        </>
+        // {/* </RedirectUserToTabs> */}
+
+
     );
 }

@@ -6,7 +6,10 @@ import { useTranslation } from "react-i18next";
 
 export default function Wellcome() {
     const router = useRouter()
-    const { t } = useTranslation();
+    const { t } = useTranslation()
+    const handleRoute = () => {
+        router.replace("/login")
+    }
     return (
         <SafeAreaView className="flex-1 bg-gray-300/50">
             <View className="flex-1 px-6 justify-between">
@@ -30,7 +33,7 @@ export default function Wellcome() {
                 {/* 🔹 BOTTOM / ACTION */}
                 <View className="mb-10">
                     <TouchableOpacity
-                        onPress={() => router.push("/login")}
+                        onPress={handleRoute}
                         className="bg-[#b88144] rounded-full py-4 mb-4">
                         <Text className="text-center text-black font-semibold text-lg shadow-md">
                             {t('start_button')}

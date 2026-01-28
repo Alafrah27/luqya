@@ -13,7 +13,7 @@ const generateToken = (userId) => {
 
 export const Register = async (req, res) => {
   try {
-    const { FullName, email, password, avatar, Expopushtoken } = req.body;
+    const { FullName, email, password, Expopushtoken } = req.body;
     if (!FullName || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
@@ -45,9 +45,7 @@ export const Register = async (req, res) => {
       email,
       password: hashedPassword,
       Expopushtoken,
-      avatar:
-        avatar ||
-        `https://api.dicebear.com/7.x/avataaars/svg?seed=${customUuid}`,
+      avatar: "",
       lastLogin: new Date(),
     });
 
@@ -122,53 +120,58 @@ export const getUserProfile = async (req, res) => {
 
 export const updateUserProfile = async (req, res) => {
   try {
-    const { FullName, avatar, email } = req.body;
+    const { FullName, avatar, email, password } = req.body;
     const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     const updates = {};
 
-    // 1. Handle FullName update
-    if (FullName) {
-      updates.FullName = FullName;
+    // 1. Basic Fields
+    if (FullName) updates.FullName = FullName;
+    if (email) updates.email = email;
+
+    // 2. Password Hashing
+    if (password) {
+      const salt = await bcryptjs.genSalt(10);
+      updates.password = await bcryptjs.hash(password, salt);
     }
 
-    if (email) {
-      updates.email = email;
-    }
-
-    // 2. Handle Avatar update via Cloudinary
+    // 3. IMAGE LOGIC (Only run if a NEW avatar is provided)
     if (avatar) {
-      // 'avatar' should be a Base64 string from your Expo app
       try {
+        // A. Delete the OLD image only if it exists and we are uploading a NEW one
+        if (user.avatar && user.avatar.includes("cloudinary")) {
+          const publicId = user.avatar.split("/").pop().split(".")[0];
+          await cloudinary.uploader.destroy(`avatars/${publicId}`);
+        }
+
+        // B. Upload the NEW image (expects Base64 string from React Native)
         const uploadResponse = await cloudinary.uploader.upload(avatar, {
           folder: "avatars",
         });
         updates.avatar = uploadResponse.secure_url;
       } catch (cloudinaryErr) {
-        console.error("Cloudinary Upload Error:", cloudinaryErr);
-        return res.status(500).json({ message: "Failed to upload image" });
+        console.error("Cloudinary Error:", cloudinaryErr);
+        return res.status(500).json({ message: "Cloudinary upload failed" });
       }
     }
 
-    // 3. Check if there is actually anything to update
+    // 4. Update the Database
     if (Object.keys(updates).length === 0) {
-      return res
-        .status(400)
-        .json({ message: "No valid fields provided for update" });
+      return res.status(400).json({ message: "No changes provided" });
     }
 
-    // 4. Update the user in Database
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { $set: updates },
       { new: true, runValidators: true },
     ).select("-password");
 
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    console.log(`✅ Profile updated for: ${updatedUser.FullName}`);
+    console.log(`✅ Profile updated: ${updatedUser.FullName}`);
     return res.status(200).json(updatedUser);
   } catch (error) {
     console.error("Update Profile Error:", error);
