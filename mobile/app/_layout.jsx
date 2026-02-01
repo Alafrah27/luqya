@@ -8,8 +8,11 @@ import "../lib/i18";
 import "../global.css";
 import { useAuthStore } from "@/store/Store";
 import { useEffect, } from "react";
-
-
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
+const queryClient = new QueryClient()
 export default function RootLayout() {
 
   const { user, isSignIn, token, userAuth } = useAuthStore();
@@ -58,13 +61,13 @@ export default function RootLayout() {
   return (
     <>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <LngProvider>
-          <BottomSheetModalProvider>
-
-            <ProtectRoute />
-
-          </BottomSheetModalProvider>
-        </LngProvider>
+        <QueryClientProvider client={queryClient} s>
+          <LngProvider>
+            <BottomSheetModalProvider>
+              <ProtectRoute />
+            </BottomSheetModalProvider>
+          </LngProvider>
+        </QueryClientProvider>
       </GestureHandlerRootView>
     </>
   );

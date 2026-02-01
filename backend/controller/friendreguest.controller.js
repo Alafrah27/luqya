@@ -5,7 +5,7 @@ import { io } from "../lib/SocketIo.js";
 export const sendFriendRequest = async (req, res) => {
   try {
     const senderId = req.user._id;
-    const { receiverId } = req.params;
+    const { id: receiverId } = req.params;
 
     const friendship = await Friendship.create({
       sender: senderId,
@@ -31,7 +31,7 @@ export const sendFriendRequest = async (req, res) => {
 
 export const acceptFriendRequest = async (req, res) => {
   try {
-    const { requestId } = req.params;
+    const {id: requestId } = req.params;
     const userId = req.user._id;
 
     const request = await Friendship.findById(requestId);
