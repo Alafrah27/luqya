@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: false, // Changed to false in case they haven't granted permission yet
     },
-    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Fixed ref to User
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "Friendship" }], // Fixed ref to User
     block: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     lastLogin: {
       type: Date,
@@ -41,6 +41,6 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
-
+userSchema.index({ FullName: "text", email: 1 });
 const User = mongoose.model("User", userSchema);
 export default User;
