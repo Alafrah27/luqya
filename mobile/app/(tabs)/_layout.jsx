@@ -65,8 +65,9 @@ export default function TabsLayout() {
                     fontSize: 20,
 
                 },
+                
             }} />
-            <Tabs.Screen name="notification" options={{
+            <Tabs.Screen name="notification" options={{ 
 
                 title: t('tab_notifications'),
                 tabBarIcon: ({ color, size }) => (
@@ -88,7 +89,7 @@ export default function TabsLayout() {
             }} />
             <Tabs.Screen name="setting" options={{
                 title: t('tab_settings'),
-                 headerShown: false,
+                headerShown: false,
                 tabBarIcon: ({ color, size }) => (
                     <Ionicons name="settings" size={size} color={color} />
                 ),

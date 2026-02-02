@@ -21,7 +21,8 @@ io.use(socketMiddleware);
 io.on("connection", (socket) => {
   const userId = socket.userId;
   onlineUsers.set(userId, socket.id);
-
+  // notify others that this current user is online
+  socket.broadcast.emit("user-online", { userId });
   // Join a room specifically for this user's ID
   socket.join(userId);
 
@@ -30,7 +31,8 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     onlineUsers.delete(userId);
-    io.emit("getOnlineUsers", Array.from(onlineUsers.keys()));
+    // notify others
+    socket.broadcast.emit("user-offline", { userId });
   });
 });
 

@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
 
-export const socket = io("https://luqya.onrender.com", {
+export const socketIo = io("https://luqya.onrender.com", {
   transports: ["websocket"],
 });
