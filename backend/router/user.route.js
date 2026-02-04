@@ -5,6 +5,7 @@ import {
   deleteUserAccount,
   Register,
   Login,
+  savePushToken,
 } from "../controller/user.controller.js";
 
 import { verifyJWT } from "../middleWare/jwtAuth.js";
@@ -14,5 +15,6 @@ router.post("/register", Register);
 router.post("/login", Login);
 router.get("/user-profile", verifyJWT, getUserProfile);
 router.put("/update-profile", verifyJWT, updateUserProfile);
+router.put("/save-push-token", verifyJWT, savePushToken);
 router.delete("/delete-account", verifyJWT, deleteUserAccount);
 export default router;

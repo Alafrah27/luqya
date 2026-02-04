@@ -2,6 +2,10 @@ import Friendship from "../model/friendregust.model.js";
 import User from "../model/user.model.js";
 import { io } from "../lib/SocketIo.js";
 
+import { Expo } from "expo-server-sdk";
+
+const expo = new Expo();
+
 export const sendFriendRequest = async (req, res) => {
   try {
     const senderId = req.user._id;
@@ -17,13 +21,24 @@ export const sendFriendRequest = async (req, res) => {
       "FullName avatar email",
     );
 
-    // 🔥 REAL TIME EVENT
+    // SOCKET REALTIME
     io.to(receiverId.toString()).emit("newFriendRequest", populated);
 
-    return res.status(200).json({
-      success: true,
-      message: "Friend request sent",
-    });
+    // PUSH NOTIFICATION
+    const receiver = await User.findById(receiverId);
+
+    if (Expo.isExpoPushToken(receiver.Expopushtoken)) {
+      await expo.sendPushNotificationsAsync([
+        {
+          to: receiver.Expopushtoken,
+          title: "Friend Request",
+          body: `${req.user.FullName} sent you a friend request`,
+          data: { senderId },
+        },
+      ]);
+    }
+
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
@@ -31,7 +46,7 @@ export const sendFriendRequest = async (req, res) => {
 
 export const acceptFriendRequest = async (req, res) => {
   try {
-    const {id: requestId } = req.params;
+    const { id: requestId } = req.params;
     const userId = req.user._id;
 
     const request = await Friendship.findById(requestId);
@@ -52,8 +67,24 @@ export const acceptFriendRequest = async (req, res) => {
       userId,
     });
 
+    // PUSH NOTIFICATION TO SENDER
+    // because User B accepted (current user), we notify User A (request.sender)
+    const sender = await User.findById(request.sender);
+
+    if (Expo.isExpoPushToken(sender.Expopushtoken)) {
+      await expo.sendPushNotificationsAsync([
+        {
+          to: sender.Expopushtoken,
+          title: "Friend Request Accepted",
+          body: `${req.user.FullName} accepted your friend request.`,
+          data: { userId }, // userId of the person who accepted (User B)
+        },
+      ]);
+    }
+
     res.json({ success: true });
   } catch (err) {
+    console.error("Error accepting friend request:", err);
     res.status(500).json({ message: "error" });
   }
 };
@@ -95,6 +126,7 @@ export const getAllMyFriendRequests = async (req, res) => {
     const friendRequests = await Friendship.find({
       receiver: userId,
       status: "pending",
+
     })
       .populate("sender", "FullName avatar email") // Get sender details
       .sort({ createdAt: -1 }); // Show newest requests first

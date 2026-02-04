@@ -1,17 +1,23 @@
 import { create } from "zustand";
-import { socketIo } from "../lib/SocketIo";
+import { createSocket } from "../lib/SocketIo";
+import * as Notifications from "expo-notifications";
+import { queryClient } from "../lib/queryClient";
+
 export const SocketIoStore = create((set, get) => ({
-  onlineUsers: new Set(),
-  isConnect: Boolean,
   socket: null,
+  onlineUsers: [],
+  isConnect: false,
 
-  connect: () => {
-    const existingSocket = get().socket;
-    if (existingSocket?.connected) return;
+  connect: (token) => {
+    if (!token) return;
 
-    if (existingSocket) existingSocket.disconnect();
+    const existing = get().socket;
+    if (existing?.connected) return;
 
-    const socket = socketIo();
+    if (existing) existing.disconnect();
+
+    const socket = createSocket(token);
+
     socket.on("connect", () => {
       set({ isConnect: true });
     });
@@ -20,10 +26,63 @@ export const SocketIoStore = create((set, get) => ({
       set({ isConnect: false });
     });
 
-    socket.on("getOnlineUsers", (onlineUsers) => {
-      set({ onlineUsers: new Set(onlineUsers) });
+    socket.on("getOnlineUsers", (users) => {
+      set({ onlineUsers: users });
     });
+
+    socket.on("user-online", ({ userId }) => {
+      set((state) => ({
+        onlineUsers: [...new Set([...state.onlineUsers, userId])],
+      }));
+    });
+
+    socket.on("user-offline", ({ userId }) => {
+      set((state) => ({
+        onlineUsers: state.onlineUsers.filter((id) => id !== userId),
+      }));
+    });
+
+    socket.on("friendRequestAccepted", ({ userId }) => {
+      // Refresh friends list/users
+      queryClient.invalidateQueries(["users"]);
+      // Refresh notifications just in case
+      queryClient.invalidateQueries(["notification"]);
+
+      Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Friend Request Accepted",
+          body: "Your friend request was accepted!",
+        },
+        trigger: null,
+      });
+
+      console.log("Friend request accepted by user:", userId);
+    });
+
+    socket.on("newFriendRequest", (data) => {
+      // Refresh notifications list to show the new request
+      queryClient.invalidateQueries(["notification"]);
+
+      Notifications.scheduleNotificationAsync({
+        content: {
+          title: "New Friend Request",
+          body: `${data.sender.FullName} sent you a friend request`,
+        },
+        trigger: null,
+      });
+    });
+
+    set({ socket });
   },
 
-  set({s})
+  disconnect: () => {
+    const socket = get().socket;
+    if (socket) socket.disconnect();
+
+    set({
+      socket: null,
+      onlineUsers: [],
+      isConnect: false,
+    });
+  },
 }));

@@ -1,12 +1,11 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from "react-i18next";
-// import ProtectRoute from "../../components/protectRoute/ProtectRoute";
 export default function TabsLayout() {
     const { t } = useTranslation();
     return (
 
-        // <ProtectRoute>
+      
 
 
         <Tabs screenOptions={{
@@ -108,7 +107,7 @@ export default function TabsLayout() {
                 },
             }} />
         </Tabs>
-        // {/* </ProtectRoute> */}
+        
 
     );
 }
