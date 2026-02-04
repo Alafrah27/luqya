@@ -31,8 +31,10 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     onlineUsers.delete(userId);
-    // notify others
+
     socket.broadcast.emit("user-offline", { userId });
+
+    io.emit("getOnlineUsers", Array.from(onlineUsers.keys()));
   });
 });
 

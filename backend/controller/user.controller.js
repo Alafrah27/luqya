@@ -4,6 +4,7 @@ import cloudinary from "../lib/cloudinary.js";
 import bcryptjs from "bcryptjs";
 import dotenv from "dotenv";
 dotenv.config();
+ 
 
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -218,4 +219,16 @@ export const deleteUserAccount = async (req, res) => {
     console.error("Delete Account Error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
+};
+
+
+
+export const savePushToken = async (req, res) => {
+  const { token } = req.body;
+
+  await User.findByIdAndUpdate(req.user._id, {
+    Expopushtoken: token,
+  });
+
+  res.json({ success: true });
 };

@@ -12,6 +12,7 @@ const colors = [
 ];
 
 function getColorFromId(id) {
+    if (!id || typeof id !== 'string') return colors[0];
     let hash = 0;
     for (let i = 0; i < id.length; i++) {
         hash = id.charCodeAt(i) + ((hash << 5) - hash);
@@ -19,9 +20,25 @@ function getColorFromId(id) {
     return colors[Math.abs(hash) % colors.length];
 }
 
-export default function FetchUsers({ item }) {
+import { useSendFriendRequest } from "../../store/transtack/query";
+import { useState } from "react";
+
+export default function FetchUsers({ item, online }) {
     const bgColor = getColorFromId(item._id);
     const { t, i18n } = useTranslation()
+    const { mutate: sendRequest, isPending } = useSendFriendRequest();
+    const [requestSent, setRequestSent] = useState(false);
+
+    const handleSendRequest = () => {
+        sendRequest(item._id, {
+            onSuccess: () => {
+                setRequestSent(true);
+            },
+            onError: (err) => {
+                console.log("Error sending request:", err);
+            }
+        });
+    }
 
     return (
         <View className="flex-row items-center p-5 bg-white border-b border-gray-100">
@@ -35,10 +52,10 @@ export default function FetchUsers({ item }) {
                         className="w-full h-full rounded-full  overflow-hidden"
                         resizeMode='cover'
                     />
-                    <Text className="h-3 w-3 bg-green-500 rounded-full absolute bottom-0 right-0"></Text>
+                    <Text className={`h-3 w-3 ${online ? "bg-green-500" : ""} rounded-full absolute bottom-0 right-0`}></Text>
                 </View>
             ) : (
-                
+
                 <View
                     style={{
                         width: 50,
@@ -53,7 +70,7 @@ export default function FetchUsers({ item }) {
                     <Text className="text-white font-bold text-xl">
                         {item?.FullName?.charAt(0)?.toUpperCase()}
                     </Text>
-                    <Text className="h-3 w-3 bg-green-500 rounded-full absolute bottom-0 right-0"></Text>
+                    <Text className={`h-3 w-3 ${online ? "bg-green-500" : ""} rounded-full absolute bottom-0 right-0`}></Text>
                 </View>
             )}
 
@@ -61,12 +78,25 @@ export default function FetchUsers({ item }) {
                 <Text className="font-bold text-base">{item?.FullName}</Text>
 
                 <View className="flex-row mt-2 space-x-2 gap-2   ">
-                    <TouchableOpacity
-                        className="bg-blue-500 px-4 py-1 rounded-full"
-                        activeOpacity={0.7}
-                    >
-                        <Text className="text-white text-sm font-semibold">{t(i18n.language === "en" ? "add friend" : "إضافة صديق")}</Text>
-                    </TouchableOpacity>
+                    {requestSent ? (
+                        <TouchableOpacity
+                            className="bg-gray-400 px-4 py-1 rounded-full"
+                            disabled={true}
+                        >
+                            <Text className="text-white text-sm font-semibold">{t(i18n.language === "en" ? "Pending" : "معلق")}</Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity
+                            className="bg-blue-500 px-4 py-1 rounded-full"
+                            activeOpacity={0.7}
+                            onPress={handleSendRequest}
+                            disabled={isPending}
+                        >
+                            <Text className="text-white text-sm font-semibold">
+                                {isPending ? "..." : t(i18n.language === "en" ? "add friend" : "إضافة صديق")}
+                            </Text>
+                        </TouchableOpacity>
+                    )}
 
                     <TouchableOpacity
                         className="bg-gray-200 px-4 py-1 rounded-full"
