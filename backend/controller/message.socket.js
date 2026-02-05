@@ -29,9 +29,9 @@ export const handleSendMessage = async (socket, io, data) => {
       text,
       file: {
         url: fileUrl || null,
-        fileType: fileType || "none",
+        fileType: fileType || "none ",
       },
-      expireAt: 7 * 24 * 60 * 60 * 1000,
+      expireAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
     // 3. LINK MESSAGE TO CHAT
