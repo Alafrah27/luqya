@@ -29,7 +29,7 @@ export const handleSendMessage = async (socket, io, data) => {
       text,
       file: {
         url: fileUrl || null,
-        fileType: fileType || "none",
+        fileType: fileType || "none ",
       },
       expireAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
