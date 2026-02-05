@@ -1,6 +1,8 @@
 import cron from "cron";
 import https from "https";
 import dotenv from "dotenv";
+import { Message } from "../model/Message.js";
+import { deleteFromCloudinary } from "./cloudinary.js";
 
 dotenv.config();
 
@@ -30,3 +32,27 @@ export default job;
 //* 30 3 15 * * - At 3:30 AM, on the 15th of every month
 //* 0 0 1 1 * - At midnight, on January 1st
 //* 0 * * * * - Every hour
+
+// Runs every minute - Cleanup job for expired messages
+const cleanupJob = new cron.CronJob("* * * * *", async () => {
+  try {
+    // Find messages that have expired but haven't been processed yet
+    const expiredMessages = await Message.find({
+      expireAt: { $lt: new Date(), $ne: null },
+    });
+
+    for (const msg of expiredMessages) {
+      // 1. Delete file from Cloudinary if it exists
+      if (msg.file?.url) {
+        await deleteFromCloudinary(msg.file.url, msg.file.fileType);
+      }
+      // 2. Delete the record from MongoDB
+      await Message.deleteOne({ _id: msg._id });
+    }
+  } catch (error) {
+    console.error("Cleanup Task Error:", error);
+  }
+});
+
+// Start the cleanup job
+cleanupJob.start();
