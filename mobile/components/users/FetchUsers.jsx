@@ -12,6 +12,7 @@ const colors = [
 ];
 
 function getColorFromId(id) {
+
     if (!id || typeof id !== 'string') return colors[0];
     let hash = 0;
     for (let i = 0; i < id.length; i++) {
@@ -22,8 +23,10 @@ function getColorFromId(id) {
 
 import { useSendFriendRequest } from "../../store/transtack/query";
 import { useState } from "react";
+import { useRouter } from "expo-router";
 
 export default function FetchUsers({ item, online }) {
+    const router = useRouter();
     const bgColor = getColorFromId(item._id);
     const { t, i18n } = useTranslation()
     const { mutate: sendRequest, isPending } = useSendFriendRequest();
@@ -40,6 +43,16 @@ export default function FetchUsers({ item, online }) {
         });
     }
 
+    const handleChatIdMessage = () => {
+        router.push({
+            pathname: "/chat/[id]",
+            params: {
+                id: item._id,
+                name: item.FullName,
+                avatar: item.avatar,
+            },
+        });
+    }
     return (
         <View className="flex-row items-center p-5 bg-white border-b border-gray-100">
             {item?.avatar ? (
@@ -99,6 +112,7 @@ export default function FetchUsers({ item, online }) {
                     )}
 
                     <TouchableOpacity
+                        onPress={handleChatIdMessage}
                         className="bg-gray-200 px-4 py-1 rounded-full"
                         activeOpacity={0.7}
                     >

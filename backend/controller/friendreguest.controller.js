@@ -11,6 +11,27 @@ export const sendFriendRequest = async (req, res) => {
     const senderId = req.user._id;
     const { id: receiverId } = req.params;
 
+    if (senderId === receiverId) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot send a friend request to yourself.",
+      });
+    }
+
+    const existingRequest = await Friendship.findOne({
+      $or: [
+        { sender: senderId, receiver: receiverId },
+        { sender: receiverId, receiver: senderId },
+      ],
+    });
+
+    if (existingRequest) {
+      return res.status(400).json({
+        success: false,
+        message: "Friend request already sent or accepted.",
+      });
+    }
+
     const friendship = await Friendship.create({
       sender: senderId,
       receiver: receiverId,
@@ -126,7 +147,9 @@ export const getAllMyFriendRequests = async (req, res) => {
     const friendRequests = await Friendship.find({
       receiver: userId,
       status: "pending",
-
+      $ne: {
+        sender: userId,
+      },
     })
       .populate("sender", "FullName avatar email") // Get sender details
       .sort({ createdAt: -1 }); // Show newest requests first

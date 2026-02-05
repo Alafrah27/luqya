@@ -3,23 +3,21 @@ import {
     View,
     Text,
     TouchableOpacity,
-    TextInput,
     ActivityIndicator,
 } from 'react-native';
 
 import { useRouter, Link } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { useContextProvider } from '../../context/LngContext';
 import { useAuthStore } from '../../store/Store';
 import BurntToastifY from '../CustomHookUi/BurntToatifY';
+import AnimatedInput from '../ui/AnimatedInput';
 
 
 const InputForm = () => {
     const [email, setEmail] = useState('');
     const [FullName, setFullName] = useState('');
     const [password, setPassword] = useState('');
-    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const { t } = useTranslation();
     const { expoPushToken } = useContextProvider()
     const register = useAuthStore((state) => state.register);
@@ -70,63 +68,31 @@ const InputForm = () => {
     return (
         <View className="flex-1  px-3  ">
             <View className=" flex-1 justify-center items-center">
-                <View
-                    className="flex-row align-center
-                  w-full bg-gray-300/30 space-x-3
-                   border border-slate-200
-                    rounded-full px-4 py-3
-                     items-center mb-5 gap-3">
-                    <Ionicons name="person-outline" size={20} color="#b88144" />
-                    <TextInput
-                        value={FullName}
-                        onChangeText={(text) => setFullName(text)}
-                        placeholder={t('input_name')}
-                        keyboardType="default"
-                        className="flex-1 text-black py-2 shrink placeholder:text-slate-400 placeholder:text-sm"
-
-                    />
-                </View>
-                <View
-                    className="flex-row align-center
-                  w-full bg-gray-300/30 space-x-3
-                   border border-slate-200
-                    rounded-full px-4 py-3
-                     items-center mb-5 gap-3">
-                    <Ionicons name="mail-outline" size={20} color="#b88144" />
-                    <TextInput
-                        value={email}
-                        onChangeText={(text) => setEmail(text)}
-                        placeholder={t('input_email')}
-                        keyboardType="email-address"
-                        className="flex-1 text-black py-2 shrink placeholder:text-slate-400 placeholder:text-sm"
-
-                    />
-                </View>
-                <View
-                    className="flex-row justify-between align-center
-                  w-full bg-gray-300/30 space-x-3
-                   border border-slate-200
-                    rounded-full px-4 py-3
-                     items-center mb-6 gap-3 ">
-
-                    <View className="flex-row align-center flex-1 gap-3" >
-
-                        <Ionicons name="lock-closed-outline" size={20} color="#b88144" />
-                        <TextInput
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry={!isPasswordVisible}
-                            placeholder={t('input_password')}
-                            keyboardType="password"
-                            className="flex-1 text-black py-2 shrink placeholder:text-slate-400 placeholder:text-sm"
-
-                        />
-                    </View>
-                    <Ionicons
-                        className="z-10"
-                        onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-                        name={isPasswordVisible ? "eye-off" : "eye"} size={16} color="#b88144" />
-                </View>
+                <AnimatedInput
+                    icon="person-outline"
+                    placeholder={t('input_name')}
+                    value={FullName}
+                    onChangeText={setFullName}
+                    keyboardType="default"
+                    index={0}
+                />
+                <AnimatedInput
+                    icon="mail-outline"
+                    placeholder={t('input_email')}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    index={1}
+                />
+                <AnimatedInput
+                    icon="lock-closed-outline"
+                    placeholder={t('input_password')}
+                    value={password}
+                    onChangeText={setPassword}
+                    keyboardType="password"
+                    isPassword={true}
+                    index={2}
+                />
             </View>
 
 

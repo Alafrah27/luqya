@@ -3,51 +3,47 @@ import instance from "../../lib/axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const useGetAllUsers = () => {
-  const { data, isLoading, error, refetch } = useQuery({
+  return useQuery({
     queryKey: ["users"],
     queryFn: async () => {
       const res = await instance.get("/users/all-users");
-      // Safety: Ensure we always return an array even if the API structure changes
       const users = res.data.users || [];
-      await AsyncStorage.setItem("users", JSON.stringify(users));
+
+      // Update the cache for the next time the app opens
+      await AsyncStorage.setItem("users_cache", JSON.stringify(users));
+
       return users;
     },
+    // This maintains the previous state while fetching fresh data
+    placeholderData: (previousData) => previousData,
     retry: false,
-    // FIX: Remove the async initialData.
-    // It's safer to let it be undefined and use the default value [] in the component.
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
-
-  return { data: data || [], isLoading, error, refetch };
 };
 
 export const useGetNotifications = () => {
-  const { data, isLoading, error, refetch } = useQuery({
+  return useQuery({
     queryKey: ["notification"],
     queryFn: async () => {
+      // 1. Fetch from your Render backend
       const res = await instance.get("/friend/request");
-      // Return the full data object to match initialData structure
-      const responseData = res.data || { requests: [] };
+      const requestData = res?.data?.requests || [];
 
-      // Save for offline use if needed (optional optimization)
-      AsyncStorage.setItem(
-        "notification",
-        JSON.stringify(responseData.requests || []),
+      // 2. Save fresh data to cache for the next app launch
+      await AsyncStorage.setItem(
+        "notification_cache",
+        JSON.stringify(requestData),
       );
 
-      return responseData;
+      return requestData;
     },
-    // Ensure initialData matches the info returned by queryFn (an object with requests array)
-    initialData: { requests: [] },
-    // Transform the data to return just the array
-    select: (data) => data?.requests || [],
-  });
+    // 3. This is the "Offline-First" magic.
+    // It looks for local data before the network request even starts.
+    placeholderData: (previousData) => previousData,
 
-  return {
-    notification: data,
-    isLoading,
-    error,
-    refetch,
-  };
+    // Optional: How long the data stays "fresh" before trying to background update
+    staleTime: 1000 * 60, // 1 minute
+  });
 };
 
 export const useSendFriendRequest = () => {
