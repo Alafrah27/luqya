@@ -8,6 +8,6 @@ import { verifyJWT } from "../middleWare/jwtAuth.js";
 const router = express.Router();
 
 router.get("/", verifyJWT, getMyChats);
-router.get("/:userId", verifyJWT, getorcreatedChat);
+router.post("/:userId", verifyJWT, getorcreatedChat);
 
 export default router;
