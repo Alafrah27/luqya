@@ -1,6 +1,5 @@
 import { Chat } from "../model/Chat.js";
 import { Message } from "../model/Message.js";
-import { User } from "../model/user.model.js"; // Import User to get the token
 import { Expo } from "expo-server-sdk";
 import { onlineUsers, activeChatRooms } from "../socket.js";
 
