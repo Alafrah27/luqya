@@ -43,3 +43,5 @@ app-example
 /android
 google-services.json
 authphone-login-firebase-adminsdk-fbsvc-7ec562e5a7.json
+
+.env.local

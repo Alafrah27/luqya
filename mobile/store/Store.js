@@ -2,6 +2,12 @@ import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
 import instance from "../lib/axios";
+import {
+  setSentryUser,
+  clearSentryUser,
+  captureException,
+  addBreadcrumb,
+} from "../lib/sentry";
 
 export const useAuthStore = create((set, get) => ({
   user: null,
@@ -26,6 +32,12 @@ export const useAuthStore = create((set, get) => ({
         isSignIn: true,
       });
 
+      // 3. Set Sentry user context for error tracking
+      setSentryUser(user);
+      addBreadcrumb("auth", "User registered successfully", {
+        userId: user._id,
+      });
+
       await Notifications.scheduleNotificationAsync({
         content: {
           title: `hello ${user.FullName}`,
@@ -36,6 +48,12 @@ export const useAuthStore = create((set, get) => ({
 
       return { success: true };
     } catch (error) {
+      // Capture registration failures to Sentry
+      captureException(error, {
+        tags: { action: "register" },
+        extra: { email: data?.email },
+      });
+
       return {
         success: false,
         message: error.response?.data?.message || "Registration failed",
@@ -61,6 +79,12 @@ export const useAuthStore = create((set, get) => ({
         isSignIn: true,
       });
 
+      // Set Sentry user context for error tracking
+      setSentryUser(user);
+      addBreadcrumb("auth", "User logged in successfully", {
+        userId: user._id,
+      });
+
       await Notifications.scheduleNotificationAsync({
         content: {
           title: `hello ${user.FullName}`,
@@ -71,6 +95,13 @@ export const useAuthStore = create((set, get) => ({
 
       return { success: true };
     } catch (error) {
+      // Capture login failures to Sentry (but not 401s)
+      if (error.response?.status !== 401) {
+        captureException(error, {
+          tags: { action: "login" },
+        });
+      }
+
       return {
         success: false,
         message: error.response?.data?.message || "Login failed",
@@ -89,16 +120,25 @@ export const useAuthStore = create((set, get) => ({
 
       const res = await instance.get("/auth/user-profile");
       set({ user: res.data, isSignIn: true, token });
+
+      // Set Sentry user context on session restore
+      setSentryUser(res.data);
+      addBreadcrumb("auth", "User session restored", { userId: res.data._id });
     } catch (error) {
       set({ isSignIn: false, user: null, token: null });
-      console.log(error);
+      clearSentryUser();
     } finally {
       set({ isLoading: false });
     }
   },
 
   logout: async () => {
+    addBreadcrumb("auth", "User logging out");
     await AsyncStorage.multiRemove(["token", "user"]);
+
+    // Clear Sentry user context
+    clearSentryUser();
+
     set({ user: null, token: null, isSignIn: false });
   },
 
@@ -112,9 +152,16 @@ export const useAuthStore = create((set, get) => ({
 
       set({ user: res.data });
 
+      // Update Sentry user context with new data
+      setSentryUser(res.data);
+      addBreadcrumb("auth", "User profile updated");
+
       return { success: true };
     } catch (error) {
-      console.log("Update error:", error.response?.data || error.message);
+      captureException(error, {
+        tags: { action: "updateUser" },
+      });
+
       return {
         success: false,
         message: error.response?.data?.message || "Update failed",
@@ -132,7 +179,11 @@ export const useAuthStore = create((set, get) => ({
       // 2. Clear EVERYTHING from Storage
       await AsyncStorage.multiRemove(["token", "user"]);
 
-      // 3. Reset the state to initial values
+      // 3. Clear Sentry user context
+      clearSentryUser();
+      addBreadcrumb("auth", "User account deleted");
+
+      // 4. Reset the state to initial values
       set({
         user: null,
         token: null,
@@ -141,7 +192,10 @@ export const useAuthStore = create((set, get) => ({
 
       return { success: true };
     } catch (error) {
-      console.log("Delete error:", error.response?.data || error.message);
+      captureException(error, {
+        tags: { action: "deleteAccount" },
+      });
+
       return {
         success: false,
         message: error.response?.data?.message || "Delete failed",

@@ -11,9 +11,7 @@ export default function UserProfile({ onPress, avatar }) {
     const imageSource = user?.avatar
         ? { uri: user.avatar }
         : defaultImage;
-    console.log("this is avatar", imageSource);
-    console.log("this is avatar", user?.avatar);
-    console.log("this is avatar", avatar);
+
     return (
         <View className="w-[95%] mx-auto ">
 
@@ -26,7 +24,7 @@ export default function UserProfile({ onPress, avatar }) {
                 <TouchableOpacity className="w-20 h-20  rounded-full " onPress={onPress}>
 
                     <Image
-                        source={imageSource}
+                        source={imageSource || avatar}
                         className="w-full h-full rounded-full  overflow-hidden"
                         resizeMode='cover'
 

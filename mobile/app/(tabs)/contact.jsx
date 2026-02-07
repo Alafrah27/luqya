@@ -10,7 +10,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function Contacts() {
     const [searchValue, setSearchValue] = useState("");
     const [refreshing, setRefreshing] = useState(false);
-    const [localCache, setLocalCache] = useState([]); // NEW: Local state for cache
+    const [localCache, setLocalCache] = useState([]);
+    const [hasServerResponded, setHasServerResponded] = useState(false);
     const navigation = useNavigation();
 
     // 1. Get online status
@@ -18,9 +19,9 @@ export default function Contacts() {
     const onlineUsers = useMemo(() => Array.isArray(onlineUsersRaw) ? onlineUsersRaw : [], [onlineUsersRaw]);
 
     // 2. Fetch users hook
-    const { data: serverData, error, refetch, isLoading, isFetching } = useGetAllUsers();
+    const { data: serverData, error, refetch, isLoading, isFetching, isSuccess } = useGetAllUsers();
 
-    // 3. NEW: Load cache manually on first mount
+    // 3. Load cache manually on first mount
     useEffect(() => {
         const loadCache = async () => {
             const cached = await AsyncStorage.getItem("users_cache");
@@ -29,16 +30,38 @@ export default function Contacts() {
         loadCache();
     }, []);
 
-    // 4. NEW: Combine Server Data and Local Cache
-    const finalData = useMemo(() => {
-        if (serverData && serverData.length > 0) return serverData;
-        return localCache;
-    }, [serverData, localCache]);
+    // 4. CRITICAL: When server responds, update local cache to match server data
+    useEffect(() => {
+        if (isSuccess && serverData !== undefined) {
+            setHasServerResponded(true);
+            setLocalCache(serverData || []);
+        }
+    }, [isSuccess, serverData]);
 
-    // 5. Filter the combined data
+    // 5. Determine what data to show
+    const finalData = useMemo(() => {
+        // If server has responded, ALWAYS use server data
+        if (hasServerResponded) {
+            return Array.isArray(serverData) ? serverData : [];
+        }
+
+        // If still loading and we have cache, show cache temporarily
+        if (isLoading && localCache?.length > 0) {
+            return localCache;
+        }
+
+        // If we have server data, use it
+        if (serverData && serverData?.length > 0) {
+            return serverData;
+        }
+
+        return [];
+    }, [serverData, localCache, hasServerResponded, isLoading]);
+
+    // 6. Filter the combined data
     const filteredData = useMemo(() => {
-        return finalData.filter((item) =>
-            item?.FullName?.toLowerCase().includes(searchValue.toLowerCase())
+        return finalData?.filter((item) =>
+            item?.FullName?.toLowerCase()?.includes(searchValue?.toLowerCase())
         );
     }, [finalData, searchValue]);
 
@@ -46,6 +69,9 @@ export default function Contacts() {
     const onRefresh = useCallback(async () => {
         try {
             setRefreshing(true);
+            // Clear local cache before refetching
+            await AsyncStorage.removeItem("users_cache");
+            setLocalCache([]);
             await refetch();
         } finally {
             setRefreshing(false);
@@ -64,7 +90,7 @@ export default function Contacts() {
     }, [navigation]);
 
     // UI Logic: Only show big spinner if NO cache and NO server data
-    const showInitialLoading = isLoading && finalData.length === 0;
+    const showInitialLoading = isLoading && finalData?.length === 0;
 
     if (showInitialLoading) {
         return (
@@ -77,7 +103,7 @@ export default function Contacts() {
     return (
         <View className="flex-1 bg-gray-50">
             {/* Syncing indicator if background update is happening */}
-            {isFetching && !refreshing && finalData.length > 0 && (
+            {isFetching && !refreshing && finalData?.length > 0 && (
                 <View className="absolute top-0 left-0 right-0 z-10 bg-[#b88144]/10 py-1">
                     <Text className="text-center text-[10px] text-[#b88144]">Updating contacts...</Text>
                 </View>
@@ -89,7 +115,7 @@ export default function Contacts() {
                 renderItem={({ item }) => (
                     <FetchUsers
                         item={item}
-                        online={onlineUsers.includes(item?._id)}
+                        online={onlineUsers?.includes(item?._id)}
                     />
                 )}
                 ListEmptyComponent={

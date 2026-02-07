@@ -2,6 +2,37 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import instance from "../../lib/axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+/**
+ * Helper to clear all app caches
+ * Call this after mutations that affect multiple data sources
+ */
+export const clearAllCaches = async () => {
+  try {
+    await AsyncStorage.multiRemove(["notification_cache", "users_cache"]);
+  } catch (error) {
+    console.warn("Failed to clear caches:", error);
+  }
+};
+
+/**
+ * Helper to remove a specific notification from cache
+ * More efficient than clearing entire cache
+ */
+export const removeNotificationFromCache = async (notificationId) => {
+  try {
+    const cached = await AsyncStorage.getItem("notification_cache");
+    if (cached) {
+      const notifications = JSON.parse(cached);
+      const updated = notifications.filter(
+        (n) => n?._id !== notificationId && n?.sender?._id !== notificationId,
+      );
+      await AsyncStorage.setItem("notification_cache", JSON.stringify(updated));
+    }
+  } catch (error) {
+    console.warn("Failed to update notification cache:", error);
+  }
+};
+
 export const useGetAllUsers = () => {
   return useQuery({
     queryKey: ["users"],
@@ -47,10 +78,16 @@ export const useGetNotifications = () => {
 };
 
 export const useSendFriendRequest = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id) => {
       const res = await instance.post(`/friend/send-request/${id}`);
       return res.data;
+    },
+    onSuccess: async () => {
+      // Invalidate queries to refetch fresh data
+      queryClient.invalidateQueries(["notification"]);
+      queryClient.invalidateQueries(["users"]);
     },
   });
 };
@@ -60,9 +97,16 @@ export const useAcceptFriendRequest = () => {
   return useMutation({
     mutationFn: async (id) => {
       const res = await instance.post(`/friend/accept-request/${id}`);
-      return res.data;
+      return { ...res.data, requestId: id };
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
+      // 1. Remove this notification from AsyncStorage cache immediately
+      await removeNotificationFromCache(data?.requestId);
+
+      // 2. Clear users cache so it refetches with new friend
+      await AsyncStorage.removeItem("users_cache");
+
+      // 3. Invalidate queries to refetch from server
       queryClient.invalidateQueries(["notification"]);
       queryClient.invalidateQueries(["users"]);
     },
@@ -74,9 +118,13 @@ export const useRejectFriendRequest = () => {
   return useMutation({
     mutationFn: async (id) => {
       const res = await instance.delete(`/friend/delete-request/${id}`);
-      return res.data;
+      return { ...res.data, requestId: id };
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
+      // 1. Remove this notification from AsyncStorage cache immediately
+      await removeNotificationFromCache(data?.requestId);
+
+      // 2. Invalidate query to refetch from server
       queryClient.invalidateQueries(["notification"]);
     },
   });
