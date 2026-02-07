@@ -1,7 +1,7 @@
 import { Chat } from "../model/Chat.js";
 import { Message } from "../model/Message.js";
 import { Expo } from "expo-server-sdk";
-import { onlineUsers, activeChatRooms } from "../socket.js";
+import { onlineUsers, activeChatRooms } from "../lib/SocketIo.js";
 
 const expo = new Expo();
 
