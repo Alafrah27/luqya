@@ -1,15 +1,15 @@
 import { Chat } from "../model/Chat.js";
 import { Message } from "../model/Message.js";
-import { User } from "../model/User.js"; // Import User to get the token
+import { User } from "../model/user.model.js"; // Import User to get the token
 import { Expo } from "expo-server-sdk";
-import { onlineUsers, activeChatRooms } from "../socket.js"; 
+import { onlineUsers, activeChatRooms } from "../socket.js";
 
 const expo = new Expo();
 
 export const handleSendMessage = async (socket, io, data) => {
   try {
     const { chatId, text, fileUrl, fileType } = data;
-    const userId = socket.userId; 
+    const userId = socket.userId;
 
     // 1. UPDATE DB (Chat Metadata)
     const chat = await Chat.findOneAndUpdate(
@@ -18,7 +18,7 @@ export const handleSendMessage = async (socket, io, data) => {
         $set: { lastMessageAt: new Date() },
         $inc: { "unreadCounts.$[elem].count": 1 },
       },
-      { arrayFilters: [{ "elem.user": { $ne: userId } }], new: true }
+      { arrayFilters: [{ "elem.user": { $ne: userId } }], new: true },
     ).populate("participants", "FullName avatar Expopushtoken"); // Populate the token!
 
     if (!chat) return socket.emit("error", "Chat not found");
@@ -35,7 +35,10 @@ export const handleSendMessage = async (socket, io, data) => {
     chat.lastMessage = newMessage._id;
     await chat.save();
 
-    const populatedMessage = await newMessage.populate("sender", "FullName avatar");
+    const populatedMessage = await newMessage.populate(
+      "sender",
+      "FullName avatar",
+    );
 
     // 3. SOCKET EMIT (For people inside the chat room)
     io.to(`chat:${chatId}`).emit("receive-message", populatedMessage);
@@ -46,31 +49,34 @@ export const handleSendMessage = async (socket, io, data) => {
       if (pId === userId.toString()) return;
 
       const recipientSocketId = onlineUsers.get(pId);
-      const currentViewingChat = recipientSocketId ? activeChatRooms.get(recipientSocketId) : null;
+      const currentViewingChat = recipientSocketId
+        ? activeChatRooms.get(recipientSocketId)
+        : null;
 
       // --- LOGIC: If user is NOT in this specific chat room ---
       if (currentViewingChat !== chatId) {
-        
         // A. If Online: Send In-App Socket Notification (Toast)
         if (recipientSocketId) {
           io.to(pId).emit("push-notification", {
             title: populatedMessage.sender.FullName,
             body: text || "Sent a file",
             chatId: chatId,
-            avatar: populatedMessage.sender.avatar
+            avatar: populatedMessage.sender.avatar,
           });
-        } 
-        
+        }
+
         // B. Always try Expo Push (The phone handles showing/hiding if app is open)
         if (Expo.isExpoPushToken(participant.Expopushtoken)) {
           try {
-            await expo.sendPushNotificationsAsync([{
-              to: participant.Expopushtoken,
-              sound: 'default',
-              title: populatedMessage.sender.FullName,
-              body: text || "Sent a file",
-              data: { chatId, type: "message" },
-            }]);
+            await expo.sendPushNotificationsAsync([
+              {
+                to: participant.Expopushtoken,
+                sound: "default",
+                title: populatedMessage.sender.FullName,
+                body: text || "Sent a file",
+                data: { chatId, type: "message" },
+              },
+            ]);
           } catch (pushError) {
             console.error("Expo Push Error:", pushError);
           }
@@ -81,10 +87,10 @@ export const handleSendMessage = async (socket, io, data) => {
       io.to(pId).emit("update-chat-list", {
         chatId,
         lastMessage: populatedMessage,
-        unreadCount: chat.unreadCounts.find((u) => u.user.toString() === pId)?.count || 0,
+        unreadCount:
+          chat.unreadCounts.find((u) => u.user.toString() === pId)?.count || 0,
       });
     });
-
   } catch (error) {
     console.error("Socket SendMessage Error:", error);
     socket.emit("error", "Failed to send message");
