@@ -1,4 +1,4 @@
-import User from "../model/user.model.js";
+import { User } from "../model/user.js";
 export const GetAllusers = async (req, res) => {
   const userId = req.user._id;
   const limit = parseInt(req.query.limit) || 10;

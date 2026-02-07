@@ -1,5 +1,5 @@
 import Friendship from "../model/friendregust.model.js";
-import User from "../model/user.model.js";
+import { User } from "../model/user.js";
 import { io } from "../lib/SocketIo.js";
 
 import { Expo } from "expo-server-sdk";

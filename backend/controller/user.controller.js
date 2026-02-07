@@ -1,10 +1,9 @@
 import jwt from "jsonwebtoken";
-import User from "../model/user.model.js";
+import { User } from "../model/user.js";
 import cloudinary from "../lib/cloudinary.js";
 import bcryptjs from "bcryptjs";
 import dotenv from "dotenv";
 dotenv.config();
- 
 
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -220,8 +219,6 @@ export const deleteUserAccount = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
 
 export const savePushToken = async (req, res) => {
   const { token } = req.body;
