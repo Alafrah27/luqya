@@ -147,9 +147,6 @@ export const getAllMyFriendRequests = async (req, res) => {
     const friendRequests = await Friendship.find({
       receiver: userId,
       status: "pending",
-      $ne: {
-        sender: userId,
-      },
     })
       .populate("sender", "FullName avatar email") // Get sender details
       .sort({ createdAt: -1 }); // Show newest requests first

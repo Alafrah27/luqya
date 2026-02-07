@@ -54,7 +54,7 @@ export default function FetchUsers({ item, online }) {
         });
     }
     return (
-        <View className="flex-row items-center p-5 bg-white border-b border-gray-100">
+        <View className="flex-row items-center py-5 px-2 bg-white border-b border-gray-100">
             {item?.avatar ? (
                 <View className="relative"
                     style={{ width: 50, height: 50, borderRadius: 25 }}

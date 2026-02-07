@@ -1,9 +1,16 @@
-import { View, Text, TouchableOpacity, Image, StatusBar } from 'react-native';
+import {
+    View, Text, TouchableOpacity,
+    Image, StatusBar, KeyboardAvoidingView
+    , Platform, Keyboard,
+    TouchableWithoutFeedback,
+
+} from 'react-native';
 import React from 'react';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import SendInput from '../../components/ui/SendInput';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // 1. Add the color logic so bgColor works
 const avatarColors = ["#F87171", "#60A5FA", "#34D399", "#FBBF24", "#A78BFA", "#FB923C"];
@@ -34,7 +41,7 @@ export default function ChatId() {
                     headerTintColor: 'white',
                     headerTitle: '',
                     headerLeft: () => (
-                        <View className="flex-row items-center ml-1 gap-2">
+                        <View className="flex-row items-center ml-1 gap-2 ">
                             <TouchableOpacity onPress={() => router.back()} className="pr-1">
                                 <Ionicons name={i18n.language === "en" ? "arrow-back" : "arrow-forward"} size={24} color="white" />
                             </TouchableOpacity>
@@ -84,11 +91,33 @@ export default function ChatId() {
 
             <StatusBar backgroundColor={MAIN_COLOR} barStyle="light-content" />
 
-            <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
-                <View className="flex-1 items-center justify-center">
-                    <Text className="text-gray-400">Chat with {name} started</Text>
-                </View>
-            </SafeAreaView>
+
+            <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+
+
+                <KeyboardAvoidingView
+                    behavior={"padding"}
+                    keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 97}
+                    enabled={true}
+                    style={{ flex: 1 }}
+
+
+                >
+                    <View style={{ flex: 1 }}>
+                        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                            <View className="flex-1 items-center justify-center"
+                                style={{ flex: 1 }}
+                            >
+                                <Text className="text-gray-400">Chat with {name} started</Text>
+
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </View>
+                    <View className=" w-full ">
+                        <SendInput />
+                    </View>
+                </KeyboardAvoidingView>
+            </SafeAreaView >
         </>
     );
-}
+} 
