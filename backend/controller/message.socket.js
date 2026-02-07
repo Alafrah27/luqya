@@ -3,6 +3,7 @@ import { Message } from "../model/Message.js";
 import { Expo } from "expo-server-sdk";
 import { onlineUsers, activeChatRooms } from "../lib/SocketIo.js";
 
+
 const expo = new Expo();
 
 export const handleSendMessage = async (socket, io, data) => {
