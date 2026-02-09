@@ -181,5 +181,3 @@ export const SocketIoStore = create((set, get) => ({
 
 
 
-//  sendQuery
-//   sendmessages
