@@ -9,6 +9,7 @@ export const SocketIoStore = create((set, get) => ({
   socket: null,
   onlineUsers: [],
   isConnect: false,
+  currentChatId: null,
 
   connect: (token) => {
     if (!token) return;
@@ -151,6 +152,16 @@ export const SocketIoStore = create((set, get) => ({
       return;
     }
     socket.emit("send-message", data);
+    if (socket?.connected) {
+      socket.emit("join-chat", chatId);
+    }
+  },
+  LeavChat: (chatId) => {
+    const { socket } = get();
+    set({ currentChatId: null });
+    if (socket?.connected) {
+      socket.emit("leave-chat", chatId);
+    }
   },
 
   disconnect: () => {
@@ -167,3 +178,6 @@ export const SocketIoStore = create((set, get) => ({
     });
   },
 }));
+
+
+
