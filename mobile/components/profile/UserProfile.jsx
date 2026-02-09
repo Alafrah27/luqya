@@ -3,7 +3,7 @@ import { useAuthStore } from '../../store/Store';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
-const defaultImage = require('../../assets/images/userprofile.png')
+const defaultImage = require('../../assets/images/person.png')
 export default function UserProfile({ onPress, avatar }) {
 
     const { user } = useAuthStore();
@@ -21,10 +21,10 @@ export default function UserProfile({ onPress, avatar }) {
 
             >
 
-                <TouchableOpacity className="w-20 h-20  rounded-full " onPress={onPress}>
+                <TouchableOpacity className="w-[70px] h-[70px]  rounded-full " onPress={onPress}>
 
                     <Image
-                        source={imageSource || avatar}
+                        source={imageSource}
                         className="w-full h-full rounded-full  overflow-hidden"
                         resizeMode='cover'
 

@@ -53,7 +53,8 @@ export const SocketIoStore = create((set, get) => ({
 
     socket.on("getOnlineUsers", (users) => {
       // Defensive check: ensure users is an array
-      set({ onlineUsers: Array.isArray(users) ? users : [] });
+      const safeData = Array.isArray(users) ? users : [];
+      set({ onlineUsers: safeData });
     });
 
     socket.on("user-online", (data) => {
@@ -138,6 +139,18 @@ export const SocketIoStore = create((set, get) => ({
     });
 
     set({ socket });
+  },
+
+  sendMessage: (data) => {
+    const { socket } = get();
+    if (!socket) {
+      console.warn("Socket not connected, cannot send message");
+      addBreadcrumb("socket", "Socket not connected, cannot send message", {
+        data,
+      });
+      return;
+    }
+    socket.emit("send-message", data);
   },
 
   disconnect: () => {

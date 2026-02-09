@@ -34,7 +34,7 @@ export default function Login() {
 
         if (result.success) {
             // Redirect to home or chat screen
-            router.replace("(tabs)");
+            router.replace("/(tabs)/chat");
         } else {
             // Show server error (e.g., "User already exists")
             alert(result.message);

@@ -49,7 +49,7 @@ const InputForm = () => {
                 preset: "done",
                 type: "success"
             })
-            router.replace("(tabs)/chat");
+            router.replace("/(tabs)/chat");
 
         } else {
             // Show server error (e.g., "User already exists")

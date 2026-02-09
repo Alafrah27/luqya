@@ -129,3 +129,27 @@ export const useRejectFriendRequest = () => {
     },
   });
 };
+
+export const SendorGetChat = (id) => {
+  return useQuery({
+    queryKey: ["chat", id],
+    queryFn: async () => {
+      const res = await instance.post(`/chat/${id}`);
+      await AsyncStorage.setItem("chat_cache", JSON.stringify(res.data));
+      return res.data;
+    },
+  });
+};
+
+export const useSendMessage = () => {
+  return useMutation({
+    mutationFn: async ({ chatId, text, fileUrl, fileType }) => {
+      const res = await instance.post(`/message/${chatId}`, {
+        text,
+        fileUrl,
+        fileType,
+      });
+      return res.data;
+    },
+  });
+};
