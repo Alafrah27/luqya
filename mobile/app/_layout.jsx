@@ -12,6 +12,7 @@ import { useEffect, useRef } from "react";
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from "../lib/queryClient";
 import SentryErrorBoundary from "../components/SentryErrorBoundary";
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import {
   initSentry,
   addNavigationBreadcrumb,
@@ -99,30 +100,36 @@ export default Sentry.wrap(function RootLayout() {
     <SentryErrorBoundary>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <QueryClientProvider client={queryClient}>
-          <LngProvider>
-            <BottomSheetModalProvider>
-              <>
-                <StatusBar style="dark" />
-                {checkAuth && <SocketConnection />}
-                <Stack
-                  screenOptions={{ headerShown: false }}
-                >
-                  {!checkAuth ? (
-                    <Stack.Screen name="(auth)" />
-                  ) : (
-                    <Stack.Screen name="(tabs)" />
-                  )}
+          <KeyboardProvider>
+            <LngProvider>
+              <BottomSheetModalProvider>
+                <>
+                  <StatusBar style="dark" />
+                  {checkAuth && <SocketConnection />}
+                  <Stack
+                    screenOptions={{ headerShown: false }}
+                  >
+                    {!checkAuth ? (
+                      <Stack.Screen name="(auth)" />
+                    ) : (
+                      <Stack.Screen name="(tabs)" />
+                    )}
 
-                  <Stack.Screen name="accountsetting" options={{
-                    headerShown: false,
-                    presentation: "modal",
-                    title: "Setting Account",
-                    animation: "fade"
-                  }} />
-                </Stack>
-              </>
-            </BottomSheetModalProvider>
-          </LngProvider>
+                    <Stack.Screen name="chat" />
+
+                    <Stack.Screen name="accountsetting" options={{
+                      headerShown: false,
+                      presentation: "modal",
+                      title: "Setting Account",
+                      animation: "fade"
+                    }} />
+
+                    <Stack.Screen name="+not-found" />
+                  </Stack>
+                </>
+              </BottomSheetModalProvider>
+            </LngProvider>
+          </KeyboardProvider>
         </QueryClientProvider>
       </GestureHandlerRootView>
     </SentryErrorBoundary>

@@ -15,7 +15,7 @@ const LogoutPage = () => {
     const handleLogout = async () => {
         await logout()
         // Use replace to ensure the user can't go "back"
-        router.replace("/(auth)/index")
+        router.replace("(auth)")
     }
 
     return (

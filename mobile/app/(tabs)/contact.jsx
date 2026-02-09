@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { SocketIoStore } from "../../store/socketioStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+
 export default function Contacts() {
     const [searchValue, setSearchValue] = useState("");
     const [refreshing, setRefreshing] = useState(false);
@@ -15,6 +16,7 @@ export default function Contacts() {
     const navigation = useNavigation();
 
     // 1. Get online status
+   
     const onlineUsersRaw = SocketIoStore((state) => state?.onlineUsers);
     const onlineUsers = useMemo(() => Array.isArray(onlineUsersRaw) ? onlineUsersRaw : [], [onlineUsersRaw]);
 
