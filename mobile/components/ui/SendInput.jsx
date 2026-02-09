@@ -51,7 +51,7 @@ export default function SendInput({ chatId }) {
         //     fileType: "none"
         // });
         setText("");
-        setInputActive(false);
+        setInputActive(false)
     };
 
     return (
