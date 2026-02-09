@@ -1,46 +1,62 @@
 import { Chat } from "../model/Chat.js";
 import { Message } from "../model/Message.js";
 import { Expo } from "expo-server-sdk";
-import { onlineUsers, activeChatRooms } from "../lib/SocketIo.js";
-
 
 const expo = new Expo();
 
-export const handleSendMessage = async (socket, io, data) => {
+export const handleSendMessage = async (
+  socket,
+  io,
+  data,
+  onlineUsers,
+  activeChatRooms,
+) => {
   try {
-    const { chatId, text, fileUrl, fileType } = data;
+    const { chatId, text, fileUrl, fileType, public_id } = data;
     const userId = socket.userId;
 
-    // 1. UPDATE DB (Chat Metadata)
-    const chat = await Chat.findOneAndUpdate(
-      { _id: chatId, participants: userId },
-      {
-        $set: { lastMessageAt: new Date() },
-        $inc: { "unreadCounts.$[elem].count": 1 },
-      },
-      { arrayFilters: [{ "elem.user": { $ne: userId } }], new: true },
-    ).populate("participants", "FullName avatar Expopushtoken"); // Populate the token!
-
-    if (!chat) return socket.emit("error", "Chat not found");
-
-    // 2. SAVE MESSAGE
+    // 1. SAVE MESSAGE FIRST to get the ID and data
     const newMessage = await Message.create({
       chat: chatId,
       sender: userId,
       text,
-      file: { url: fileUrl || null, fileType: fileType || "none" },
+      file: {
+        url: fileUrl || null,
+        public_id: public_id || null, // Ensure we save this for deletion!
+        fileType: fileType || "none",
+      },
       expireAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
-
-    chat.lastMessage = newMessage._id;
-    await chat.save();
 
     const populatedMessage = await newMessage.populate(
       "sender",
       "FullName avatar",
     );
 
-    // 3. SOCKET EMIT (For people inside the chat room)
+    // 2. UPDATE CHAT METADATA
+    // We must match the schema: lastMessage is an OBJECT, not an ID.
+    const chat = await Chat.findOneAndUpdate(
+      { _id: chatId, participants: userId },
+      {
+        $set: {
+          lastMessageAt: new Date(),
+          lastMessage: {
+            text: text,
+            sender: userId,
+            messageType: fileType && fileType !== "none" ? fileType : "text",
+          },
+        },
+        $inc: { "unreadCounts.$[elem].count": 1 },
+      },
+      {
+        arrayFilters: [{ "elem.user": { $ne: userId } }],
+        new: true,
+      },
+    ).populate("participants", "FullName avatar Expopushtoken");
+
+    if (!chat) return socket.emit("error", "Chat not found");
+
+    // 3. SOCKET EMIT (To everyone in the room, including sender for confirmation)
     io.to(`chat:${chatId}`).emit("receive-message", populatedMessage);
 
     // 4. SMART NOTIFICATION LOGIC (Socket + Expo)
@@ -49,15 +65,16 @@ export const handleSendMessage = async (socket, io, data) => {
       if (pId === userId.toString()) return;
 
       const recipientSocketId = onlineUsers.get(pId);
+      // Check if user is currently looking at THIS chat
       const currentViewingChat = recipientSocketId
         ? activeChatRooms.get(recipientSocketId)
         : null;
 
       // --- LOGIC: If user is NOT in this specific chat room ---
       if (currentViewingChat !== chatId) {
-        // A. If Online: Send In-App Socket Notification (Toast)
+        // A. If Online: Send In-App Socket Notification (Toast/Popup)
         if (recipientSocketId) {
-          io.to(pId).emit("push-notification", {
+          io.to(recipientSocketId).emit("push-notification", {
             title: populatedMessage.sender.FullName,
             body: text || "Sent a file",
             chatId: chatId,
@@ -65,7 +82,7 @@ export const handleSendMessage = async (socket, io, data) => {
           });
         }
 
-        // B. Always try Expo Push (The phone handles showing/hiding if app is open)
+        // B. Expo Push Notification (Background/Killed state)
         if (Expo.isExpoPushToken(participant.Expopushtoken)) {
           try {
             await expo.sendPushNotificationsAsync([
@@ -83,13 +100,23 @@ export const handleSendMessage = async (socket, io, data) => {
         }
       }
 
-      // 5. Update Chat List Badge
-      io.to(pId).emit("update-chat-list", {
-        chatId,
-        lastMessage: populatedMessage,
-        unreadCount:
-          chat.unreadCounts.find((u) => u.user.toString() === pId)?.count || 0,
-      });
+      // 5. Update Chat List Badge (Always update badge even if in chat, or maybe not? usually yes)
+      // The unread count is already incremented in DB. We send the new count.
+      const unreadCount =
+        chat.unreadCounts.find((u) => u.user.toString() === pId)?.count || 0;
+
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit("update-chat-list", {
+          chatId,
+          lastMessage: {
+            text: text,
+            sender: populatedMessage.sender, // We might want full sender info here for preview
+            messageType: fileType || "text",
+            createdAt: populatedMessage.createdAt,
+          },
+          unreadCount,
+        });
+      }
     });
   } catch (error) {
     console.error("Socket SendMessage Error:", error);

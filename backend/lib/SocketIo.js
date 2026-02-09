@@ -46,7 +46,7 @@ io.on("connection", (socket) => {
 
   socket.on("send-message", async (data) => {
     // We pass activeChatRooms to our controller to check recipient status
-    handleSendMessage(socket, io, data);
+    handleSendMessage(socket, io, data, onlineUsers, activeChatRooms);
   });
 
   socket.on("typing", async (data) => {
